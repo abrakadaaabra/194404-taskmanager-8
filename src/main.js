@@ -1,18 +1,18 @@
 'use strict';
 
 // Отрисовка фильтров
-const filterContainer = document.querySelector('.filter');
+const filterContainer = document.querySelector(`.filter`);
 
 const renderFilter = (caption, count, isChecked = false, isDisabled = false) => {
   caption = caption.toLowerCase();
   const attributes = {
     id: `filter__${caption}`,
-    checked: isChecked ? 'checked' : '',
-    disabled: isDisabled ? 'disabled' : '',
-    class: 'filter__input visually-hidden',
-  }
+    checked: isChecked ? `checked` : ``,
+    disabled: isDisabled ? `disabled` : ``,
+    class: `filter__input visually-hidden`,
+  };
 
-  const filterTemplate = document.createElement('template');
+  const filterTemplate = document.createElement(`template`);
 
   filterTemplate.innerHTML = `
     <input
@@ -30,34 +30,34 @@ const renderFilter = (caption, count, isChecked = false, isDisabled = false) => 
 
   const filterElements = filterTemplate.content;
   filterContainer.appendChild(filterElements);
-}
+};
 
 const filterCaptions = [
-  'all',
-  'overdue',
-  'today',
-  'favorites',
-  'repeating',
-  'tags',
-  'archive'
+  `all`,
+  `overdue`,
+  `today`,
+  `favorites`,
+  `repeating`,
+  `tags`,
+  `archive`
 ];
 
 const randomInteger = (min = 0, max) => Math.round(min - 0.5 + Math.random() * (max - min + 1));
 
 filterCaptions.forEach((caption) => {
   renderFilter(caption, randomInteger(0, 100));
-})
+});
 
 
 // Отрисовка задач
-const taskContainer = document.querySelector('.board__tasks');
+const taskContainer = document.querySelector(`.board__tasks`);
 
-const renderTask = (color, state = '', type = '') => {
+const renderTask = (color, state = ``, type = ``) => {
   const taskColor = `card--${color}`;
-  const taskState = state ? `card--${state}` : '';
-  const taskType  = type ? `card--${type}` : '';
+  const taskState = state ? `card--${state}` : ``;
+  const taskType = type ? `card--${type}` : ``;
 
-  const taskTemplate = document.createElement('template');
+  const taskTemplate = document.createElement(`template`);
 
   taskTemplate.innerHTML = `
     <article class="card ${taskState} ${taskColor} ${taskType}">
@@ -310,10 +310,10 @@ const renderTask = (color, state = '', type = '') => {
 
   const taskElement = taskTemplate.content;
   taskContainer.appendChild(taskElement);
-}
+};
 
 const amountOfTasks = 7;
 
 for (let i = 0; i < amountOfTasks; i++) {
-  renderTask('black');
+  renderTask(`black`);
 }

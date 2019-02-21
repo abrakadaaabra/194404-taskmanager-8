@@ -1,65 +1,19 @@
 'use strict';
 
-// Отрисовка фильтров
-const filterContainer = document.querySelector(`.filter`);
-
-const renderFilter = (caption, count, isChecked = false, isDisabled = false) => {
-  caption = caption.toLowerCase();
-  const attributes = {
-    id: `filter__${caption}`,
-    checked: isChecked ? `checked` : ``,
-    disabled: isDisabled ? `disabled` : ``,
-    class: `filter__input visually-hidden`,
-  };
-
-  const filterTemplate = document.createElement(`template`);
-
-  filterTemplate.innerHTML = `
-    <input
-      type="radio"
-      id="${attributes.id}"
-      class="${attributes.class}"
-      name="filter"
-      ${attributes.checked}
-      ${attributes.disabled}
-    />
-    <label for="${attributes.id}" class="filter__label">
-      ${caption.toUpperCase()} <span class="filter__${caption}-count">${count}</span>
-    </label>
-  `;
-
-  const filterElements = filterTemplate.content;
-  filterContainer.appendChild(filterElements);
-};
-
-const filterCaptions = [
-  `all`,
-  `overdue`,
-  `today`,
-  `favorites`,
-  `repeating`,
-  `tags`,
-  `archive`
-];
-
-const randomInteger = (min = 0, max) => Math.round(min - 0.5 + Math.random() * (max - min + 1));
-
-filterCaptions.forEach((caption) => {
-  renderFilter(caption, randomInteger(0, 100));
-});
-
+// Возвращает случайное целое число в диапазоне [min, max)
+const randomInteger = (max, min = 0) => Math.floor(Math.random() * (max - min)) + min;
 
 // Отрисовка задач
-const taskContainer = document.querySelector(`.board__tasks`);
+// DOM-элемент, в который отрисовываем фильтры
+const tasksContainer = document.querySelector(`.board__tasks`);
 
-const renderTask = (color, state = ``, type = ``) => {
+// Возвращает шаблон карточки задачи
+const renderTaskTemplate = (color, state = ``, type = ``) => {
   const taskColor = `card--${color}`;
   const taskState = state ? `card--${state}` : ``;
   const taskType = type ? `card--${type}` : ``;
 
-  const taskTemplate = document.createElement(`template`);
-
-  taskTemplate.innerHTML = `
+  const taskTemplate = `
     <article class="card ${taskState} ${taskColor} ${taskType}">
       <form class="card__form" method="get">
         <div class="card__inner">
@@ -308,12 +262,83 @@ const renderTask = (color, state = ``, type = ``) => {
     </article>
   `;
 
-  const taskElement = taskTemplate.content;
-  taskContainer.appendChild(taskElement);
+  return taskTemplate;
 };
 
-const amountOfTasks = 7;
+const renderTasks = (amount, container) => {
+  const tasksTemplate = document.createElement('template');
+  tasksTemplate.innerHTML = '';
 
-for (let i = 0; i < amountOfTasks; i++) {
-  renderTask(`black`);
+  for (let i = 0; i < amount; i++) {
+    tasksTemplate.innerHTML += renderTaskTemplate(`black`);
+  }
+
+  container.appendChild(tasksTemplate.content);
 }
+
+renderTasks(7, tasksContainer);
+
+// Отрисовка фильтров
+
+// DOM-элемент, в который отрисовываем фильтры
+const filtersContainer = document.querySelector('.filter');
+
+// Массив с названиями фильтов
+const filtersCaptions = [
+  `all`,
+  `overdue`,
+  `today`,
+  `favorites`,
+  `repeating`,
+  `tags`,
+  `archive`
+];
+
+// Возвращает шаблон фильтра
+const renderFilterTemplate = (caption, count, isChecked = false, isDisabled = false) => {
+  caption = caption.toLowerCase();
+  const attributes = {
+    id: `filter__${caption}`,
+    checked: isChecked ? `checked` : ``,
+    disabled: isDisabled ? `disabled` : ``,
+    class: `filter__input visually-hidden`,
+  };
+
+  const filterTemplate = `
+    <input
+      type="radio"
+      id="${attributes.id}"
+      class="${attributes.class}"
+      name="filter"
+      ${attributes.checked}
+      ${attributes.disabled}
+    />
+    <label for="${attributes.id}" class="filter__label">
+      ${caption.toUpperCase()} <span class="filter__${caption}-count">${count}</span>
+    </label>
+  `;
+
+  return filterTemplate;
+};
+
+// Отрисовывает фильтры с названиями из captions в dom-элемент container
+const renderFilters = (captions, container) => {
+  const filtersTemplate = document.createElement('template');
+  filtersTemplate.innerHTML = '';
+
+  captions.forEach((caption) => {
+    filtersTemplate.innerHTML += renderFilterTemplate(caption, randomInteger(0, 100))
+  });
+
+  const filters = filtersTemplate.content.querySelectorAll('.filter__input');
+  filters.forEach(filter => {
+    filter.addEventListener('click', function (e) {
+      tasksContainer.innerHTML = '';
+      renderTasks(randomInteger(10), tasksContainer);
+    });
+  });
+
+  container.appendChild(filtersTemplate.content);
+}
+
+renderFilters(filtersCaptions, filtersContainer);

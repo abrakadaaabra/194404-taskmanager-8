@@ -266,22 +266,22 @@ const renderTaskTemplate = (color, state = ``, type = ``) => {
 };
 
 const renderTasks = (amount, container) => {
-  const tasksTemplate = document.createElement('template');
-  tasksTemplate.innerHTML = '';
+  const tasksTemplate = document.createElement(`template`);
+  tasksTemplate.innerHTML = ``;
 
   for (let i = 0; i < amount; i++) {
     tasksTemplate.innerHTML += renderTaskTemplate(`black`);
   }
 
   container.appendChild(tasksTemplate.content);
-}
+};
 
 renderTasks(7, tasksContainer);
 
 // Отрисовка фильтров
 
 // DOM-элемент, в который отрисовываем фильтры
-const filtersContainer = document.querySelector('.filter');
+const filtersContainer = document.querySelector(`.filter`);
 
 // Массив с названиями фильтов
 const filtersCaptions = [
@@ -323,22 +323,22 @@ const renderFilterTemplate = (caption, count, isChecked = false, isDisabled = fa
 
 // Отрисовывает фильтры с названиями из captions в dom-элемент container
 const renderFilters = (captions, container) => {
-  const filtersTemplate = document.createElement('template');
-  filtersTemplate.innerHTML = '';
+  const filtersTemplate = document.createElement(`template`);
+  filtersTemplate.innerHTML = ``;
 
   captions.forEach((caption) => {
-    filtersTemplate.innerHTML += renderFilterTemplate(caption, randomInteger(0, 100))
+    filtersTemplate.innerHTML += renderFilterTemplate(caption, randomInteger(0, 100));
   });
 
-  const filters = filtersTemplate.content.querySelectorAll('.filter__input');
-  filters.forEach(filter => {
-    filter.addEventListener('click', function (e) {
-      tasksContainer.innerHTML = '';
+  const filters = filtersTemplate.content.querySelectorAll(`.filter__input`);
+  filters.forEach((filter) => {
+    filter.addEventListener(`click`, function () {
+      tasksContainer.innerHTML = ``;
       renderTasks(randomInteger(10), tasksContainer);
     });
   });
 
   container.appendChild(filtersTemplate.content);
-}
+};
 
 renderFilters(filtersCaptions, filtersContainer);

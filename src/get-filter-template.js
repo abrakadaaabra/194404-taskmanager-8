@@ -1,5 +1,5 @@
 // Возвращает шаблон фильтра
-const renderFilterTemplate = (caption, count, isChecked = false, isDisabled = false) => {
+const getFilterTemplate = (caption, count, isChecked = false, isDisabled = false) => {
   caption = caption.toLowerCase();
   const attributes = {
     id: `filter__${caption}`,
@@ -25,4 +25,4 @@ const renderFilterTemplate = (caption, count, isChecked = false, isDisabled = fa
   return filterTemplate;
 };
 
-export default renderFilterTemplate;
+export default getFilterTemplate;

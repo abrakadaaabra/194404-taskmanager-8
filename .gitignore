@@ -15,5 +15,5 @@ node_modules/
 build/
 
 # Собранный JS-код проекта
-bundle.js
-bundle.js.map
+public/bundle.js
+public/bundle.js.map

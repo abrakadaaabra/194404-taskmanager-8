@@ -1,15 +1,29 @@
-import generateTasksData from './generate-tasks-data';
-import getTaskTemplate from './get-task-template';
+import Task from "./classes/task";
+import TaskEdit from './classes/task-edit';
 
-// Отрисовывает указанное количество карточек задач amount в dom-элемент container
-const renderTasks = (amount, container) => {
-  const tasksTemplate = document.createElement(`template`);
+const renderTask = (data, id, container) => {
+  const task = new Task(data, id);
+  const taskElement = task.render();
 
-  generateTasksData(amount).forEach((taskData, id) => {
-    tasksTemplate.innerHTML += getTaskTemplate(taskData, id);
-  });
+  const taskEdit = new TaskEdit(data, id);
 
-  container.appendChild(tasksTemplate.content.cloneNode(true));
+  container.appendChild(taskElement);
+
+  task.onEdit = () => {
+    taskEdit.render();
+    container.replaceChild(taskEdit.element, task.element);
+    task.unrender();
+  };
+
+  taskEdit.onSubmit = () => {
+    task.render();
+    container.replaceChild(task.element, taskEdit.element);
+    taskEdit.unrender();
+  };
+};
+
+const renderTasks = (tasksData, container) => {
+  tasksData.map((data, id) => renderTask(data, id, container));
 };
 
 export default renderTasks;

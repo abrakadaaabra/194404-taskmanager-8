@@ -7,8 +7,6 @@ const renderTask = (data, id, container) => {
 
   const taskEdit = new TaskEdit(data, id);
 
-  container.appendChild(taskElement);
-
   task.onEdit = () => {
     taskEdit.render();
     container.replaceChild(taskEdit.element, task.element);
@@ -20,10 +18,19 @@ const renderTask = (data, id, container) => {
     container.replaceChild(task.element, taskEdit.element);
     taskEdit.unrender();
   };
+
+  return taskElement;
 };
 
 const renderTasks = (tasksData, container) => {
-  tasksData.map((data, id) => renderTask(data, id, container));
+  const fragment = document.createDocumentFragment();
+
+  tasksData.map((data, id) => {
+    const element = renderTask(data, id, container);
+    fragment.appendChild(element);
+  });
+
+  container.appendChild(fragment);
 };
 
 export default renderTasks;

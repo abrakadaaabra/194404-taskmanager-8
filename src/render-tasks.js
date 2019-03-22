@@ -10,7 +10,10 @@ const renderTask = (data, id, container) => {
     if (!task.editForm) {
       task.editForm = new TaskEdit(data, id);
 
-      task.editForm.onSubmit = () => {
+      task.editForm.onSubmit = (newData) => {
+        Object.assign(data, newData);
+
+        task.update(data);
         task.render();
         container.replaceChild(task.element, task.editForm.element);
         task.editForm.unrender();

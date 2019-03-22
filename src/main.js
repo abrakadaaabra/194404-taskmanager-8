@@ -3,7 +3,7 @@ import renderTasks from './render-tasks';
 import renderFilters from './render-filters';
 import mockFiltersData from './mock-filters-data';
 
-const AMOUNT_OF_TASKS = 7;
+const AMOUNT_OF_TASKS = 1;
 
 // DOM-элемент, в который отрисовываем карточки задач
 const tasksContainer = document.querySelector(`.board__tasks`);

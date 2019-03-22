@@ -1,31 +1,42 @@
 import mockTaskData from '../mock-task-data';
 import TaskComponent from './task-component';
+import flatpickr from 'flatpickr';
+import moment from 'moment';
 
+// TODO: jsDoc
 class TaskEdit extends TaskComponent {
   constructor(data, id) {
     super(data, id);
 
-    this._formSubmitHandler = this._formSubmitHandler.bind(this);
-  }
+    this._onSubmit = null;
 
-  set onSubmit(handler) {
-    this._onSubmit = handler;
+    this._formSubmitHandler = this._formSubmitHandler.bind(this);
+    this._changeDueDateToggleHandler = this._changeDueDateToggleHandler.bind(this);
+    this._changeRepeatedToggleHandler = this._changeRepeatedToggleHandler.bind(this);
+
+    this._updateState();
   }
 
   get _template() {
-    const isExpired = Date.now() > this._dueDate;
-    const isDateDeadlineDisabled = !this._dueDate ? ` disabled` : ``;
-    const hasDueDate = () => this._dueDate ? `yes` : `no`;
-    const hasRepeatingDays = () => this._isRepeated ? `yes` : `no`;
+    const isDisabled = (property) => !property ? ` disabled` : ``;
+    const isExists = (property) => property ? `yes` : `no`;
+
+    const Colors = {
+      black: `card--black`,
+      green: `card--green`,
+      yellow: `card--yellow`,
+      pink: `card--pink`,
+      blue: `card--blue`
+    };
 
     const computedClasses = {
       card: {
-        deadline: isExpired ? `card--deadline` : ``,
-        repeated: this._isRepeated ? `card--repeat` : ``,
-        color: this._color ? `card--${this._color}` : `card--black`,
+        deadline: this._state.isExpired ? `card--deadline` : ``,
+        repeated: this._state.isRepeated ? `card--repeat` : ``,
+        color: Colors[this._color],
       },
       others: {
-        hasNoPicture: this._picture ? `` : `card__img-wrap--empty`
+        hasNoPicture: !this._picture ? `card__img-wrap--empty` : ``
       }
     };
 
@@ -35,27 +46,6 @@ class TaskEdit extends TaskComponent {
         .trim()
         .replace(/\s+/g, ` `);
     };
-
-    const getFormattedDateTime = () => {
-      const date = new Date(this._dueDate);
-
-      const dayAndMonth = date.toLocaleString(`ru`, {
-        day: `numeric`,
-        month: `long`
-      });
-
-      const time = date.toLocaleString(`ru`, {
-        hour: `numeric`,
-        minute: `numeric`
-      });
-
-      return {
-        dayAndMonth,
-        time
-      };
-    };
-
-    const formattedDateTime = this._dueDate ? getFormattedDateTime() : null;
 
     const repeatDaysInputs = () => Object.keys(this._repeatingDays).map((day) => `
       <input
@@ -137,34 +127,34 @@ class TaskEdit extends TaskComponent {
               <div class="card__details">
                 <div class="card__dates">
                   <button class="card__date-deadline-toggle" type="button">
-                    date: <span class="card__date-status">${hasDueDate()}</span>
+                    date: <span class="card__date-status">${isExists(this._state.isDate)}</span>
                   </button>
 
-                  <fieldset class="card__date-deadline"${isDateDeadlineDisabled}>
+                  <fieldset class="card__date-deadline"${isDisabled(this._state.isDate)}>
                     <label class="card__input-deadline-wrap">
                       <input
                         class="card__date"
                         type="text"
-                        placeholder="23 September"
+                        placeholder="${moment(Date.now()).format(`D MMMM`)}"
                         name="date"
-                        value="${this._dueDate ? formattedDateTime.dayAndMonth : ``}"
+                        value="${this._dueDate ? moment(this._dueDate).format(`D MMMM`) : ``}"
                       />
                     </label>
                     <label class="card__input-deadline-wrap">
                       <input
                         class="card__time"
                         type="text"
-                        placeholder="11:15 PM"
+                        placeholder="${moment(Date.now()).format(`hh:mm A`)}"
                         name="time"
-                        value="${this._dueDate ? formattedDateTime.time : ``}"
+                        value="${this._dueDate ? moment(this._dueDate).format(`hh:mm A`) : ``}"
                       />
                     </label>
                   </fieldset>
                   <button class="card__repeat-toggle" type="button">
-                    repeat:<span class="card__repeat-status">${hasRepeatingDays()}</span>
+                    repeat:<span class="card__repeat-status">${isExists(this._state.isRepeated)}</span>
                   </button>
 
-                  <fieldset class="card__repeat-days"${!this._isRepeated ? ` disabled` : ``}>
+                  <fieldset class="card__repeat-days"${isDisabled(this._state.isRepeated)}>
                     <div class="card__repeat-days-inner">
                       ${repeatDaysInputs()}
                     </div>
@@ -172,7 +162,7 @@ class TaskEdit extends TaskComponent {
                 </div>
                 <div class="card__hashtag">
                   <div class="card__hashtag-list">
-                    ${hashtagListItems()}
+                    ${this._hashtags ? hashtagListItems() : ``}
                   </div>
 
                   <label>
@@ -216,22 +206,125 @@ class TaskEdit extends TaskComponent {
     return template;
   }
 
+  /* TODO: Добавить dueTime, picture, isFavorite, isDone */
+  _convertFormDataToTaskData(formData) {
+    const newTaskData = {
+      description: ``,
+      dueDate: null,
+      hashtags: new Set(),
+      repeatingDays: {
+        'mo': false,
+        'tu': false,
+        'we': false,
+        'th': false,
+        'fr': false,
+        'sa': false,
+        'su': false,
+      },
+      color: ``
+    };
+
+    const taskEditMapper = TaskEdit.createMapper(newTaskData);
+
+    for (const pair of formData.entries()) {
+      const [key, value] = pair;
+      if (taskEditMapper.hasOwnProperty(key)) {
+        taskEditMapper[key](value);
+      }
+    }
+
+    return newTaskData;
+  }
+
+  set onSubmit(handler) {
+    this._onSubmit = handler;
+  }
+
   _formSubmitHandler(e) {
+    e.preventDefault();
+
+    const form = this._element.querySelector(`.card__form`);
+    const formData = new FormData(form);
+    const newTaskData = this._convertFormDataToTaskData(formData);
+
     if (this._onSubmit && typeof this._onSubmit === `function`) {
-      e.preventDefault();
-      this._onSubmit();
+      this._onSubmit(newTaskData);
+    }
+
+    this.update(newTaskData);
+  }
+
+  _changeDueDateToggleHandler() {
+    this._state.isDate = !this._state.isDate;
+    this._updateElement();
+  }
+
+  _changeRepeatedToggleHandler() {
+    this._state.isRepeated = !this._state.isRepeated;
+    this._updateElement();
+  }
+
+  _addEventHandlers() {
+    const form = this._element.querySelector(`.card__form`);
+    const dueDateToggle = this._element.querySelector(`.card__date-deadline-toggle`);
+    const repeatedToggle = this._element.querySelector(`.card__repeat-toggle`);
+    const dueDatePicker = this._element.querySelector(`.card__date`);
+    const dueTimePicker = this._element.querySelector(`.card__time`);
+
+    form.addEventListener(`submit`, this._formSubmitHandler);
+    dueDateToggle.addEventListener(`click`, this._changeDueDateToggleHandler);
+    repeatedToggle.addEventListener(`click`, this._changeRepeatedToggleHandler);
+
+    if (this._state.isDate) {
+      flatpickr(dueDatePicker, {
+        altInput: true,
+        altFormat: `j F`,
+        dateFormat: `j F`
+      });
+      flatpickr(dueTimePicker, {
+        enableTime: true,
+        noCalendar: true,
+        altInput: true,
+        altFormat: `h:i K`,
+        dateFormat: `h:i K`
+      });
     }
   }
 
-  _createListeners() {
+  _removeEventHandlers() {
     const form = this._element.querySelector(`.card__form`);
-    form.addEventListener(`submit`, this._formSubmitHandler);
+    const dueDateToggle = this._element.querySelector(`.card__date-deadline-toggle`);
+    const repeatedToggle = this._element.querySelector(`.card__repeat-toggle`);
+    const flatpickrElements = document.querySelectorAll(`.flatpickr-calendar`);
+
+    form.removeEventListener(`submit`, this._formSubmitHandler);
+    dueDateToggle.removeEventListener(`click`, this._changeDueDateToggleHandler);
+    repeatedToggle.removeEventListener(`click`, this._changeRepeatedToggleHandler);
+    if (flatpickrElements.length > 0) {
+      [...flatpickrElements].forEach((element) => element.remove());
+    }
   }
 
-  _removeListeners() {
-    const form = this._element.querySelector(`.card__form`);
-    form.removeEventListener(`submit`, this._formSubmitHandler);
+  _updateElement() {
+    const newElement = this._createElement();
+
+    this._removeEventHandlers();
+    this._element.parentNode.replaceChild(newElement, this._element);
+    this._element = newElement;
+    this._addEventHandlers();
   }
+
+  /* TODO: Добавить dueTime, picture, isFavorite, isDone */
+  static createMapper(target) {
+    return {
+      text: (value) => (target.description = value),
+      date: (value) => (target.dueDate = value),
+      hashtag: (value) => target.hashtags.add(value),
+      repeat: (value) => (target.repeatingDays[value] = true),
+      color: (value) => (target.color = value),
+    };
+  }
+
 }
 
 export default TaskEdit;

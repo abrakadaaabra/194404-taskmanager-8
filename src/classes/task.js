@@ -1,28 +1,36 @@
 import TaskComponent from './task-component';
+import moment from 'moment';
 
 class Task extends TaskComponent {
   constructor(data, id) {
     super(data, id);
 
-    this._clickEditBtnHandler = this._clickEditBtnHandler.bind(this);
-  }
+    this._onEdit = null;
 
-  set onEdit(handler) {
-    this._onEdit = handler;
+    this._clickEditBtnHandler = this._clickEditBtnHandler.bind(this);
+
+    this._updateState();
   }
 
   get _template() {
-    const isExpired = Date.now() > this._dueDate;
-    const isDateDeadlineDisabled = !this._dueDate ? ` disabled` : ``;
+    const isDisabled = (property) => !property ? ` disabled` : ``;
+
+    const Colors = {
+      black: `card--black`,
+      green: `card--green`,
+      yellow: `card--yellow`,
+      pink: `card--pink`,
+      blue: `card--blue`
+    };
 
     const computedClasses = {
       card: {
-        deadline: isExpired ? `card--deadline` : ``,
-        repeated: this._isRepeated ? `card--repeat` : ``,
-        color: this._color ? `card--${this._color}` : `card--black`,
+        deadline: this._state.isExpired ? `card--deadline` : ``,
+        repeated: this._state.isRepeated ? `card--repeat` : ``,
+        color: Colors[this._color],
       },
       others: {
-        hasNoPicture: this._picture ? `` : `card__img-wrap--empty`
+        hasNoPicture: !this._picture ? `card__img-wrap--empty` : ``
       }
     };
 
@@ -32,27 +40,6 @@ class Task extends TaskComponent {
         .trim()
         .replace(/\s+/g, ` `);
     };
-
-    const getFormattedDateTime = () => {
-      const date = new Date(this._dueDate);
-
-      const dayAndMonth = date.toLocaleString(`ru`, {
-        day: `numeric`,
-        month: `long`
-      });
-
-      const time = date.toLocaleString(`ru`, {
-        hour: `numeric`,
-        minute: `numeric`
-      });
-
-      return {
-        dayAndMonth,
-        time
-      };
-    };
-
-    const formattedDateTime = this._dueDate ? getFormattedDateTime() : null;
 
     const hashtagListItems = () => [...this._hashtags].map((hashtag) => `
       <span class="card__hashtag-inner">
@@ -94,14 +81,14 @@ class Task extends TaskComponent {
             <div class="card__settings">
               <div class="card__details">
                 <div class="card__dates">
-                  <fieldset class="card__date-deadline"${isDateDeadlineDisabled}>
+                  <fieldset class="card__date-deadline"${isDisabled(this._state.isDate)}>
                     <label class="card__input-deadline-wrap">
                       <input
                         class="card__date"
                         type="text"
                         placeholder="23 September"
                         name="date"
-                        value="${formattedDateTime ? formattedDateTime.dayAndMonth : ``}"
+                        value="${this._dueDate ? moment(this._dueDate).format(`D MMMM`) : ``}"
                       />
                     </label>
                     <label class="card__input-deadline-wrap">
@@ -110,14 +97,14 @@ class Task extends TaskComponent {
                         type="text"
                         placeholder="11:15 PM"
                         name="time"
-                        value="${formattedDateTime ? formattedDateTime.time : ``}"
+                        value="${this._dueDate ? moment(this._dueDate).format(`hh:mm A`) : ``}"
                       />
                     </label>
                   </fieldset>
                 </div>
                 <div class="card__hashtag">
                   <div class="card__hashtag-list">
-                    ${hashtagListItems()}
+                    ${this._hashtags ? hashtagListItems() : ``}
                   </div>
                 </div>
               </div>
@@ -137,18 +124,22 @@ class Task extends TaskComponent {
     return template;
   }
 
+  set onEdit(handler) {
+    this._onEdit = handler;
+  }
+
   _clickEditBtnHandler() {
     if (this._onEdit && typeof this._onEdit === `function`) {
       this._onEdit();
     }
   }
 
-  _createListeners() {
+  _addEventHandlers() {
     const editBtn = this._element.querySelector(`.card__btn--edit`);
     editBtn.addEventListener(`click`, this._clickEditBtnHandler);
   }
 
-  _removeListeners() {
+  _removeEventHandlers() {
     const editBtn = this._element.querySelector(`.card__btn--edit`);
     editBtn.removeEventListener(`click`, this._clickEditBtnHandler);
   }

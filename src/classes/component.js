@@ -16,9 +16,9 @@ class Component {
     throw new Error(`You have to define template.`);
   }
 
-  _createElement(template) {
+  _createElement() {
     const tmpElement = document.createElement(`div`);
-    tmpElement.innerHTML = template;
+    tmpElement.innerHTML = this._template;
 
     const element = tmpElement.firstElementChild;
 
@@ -26,21 +26,23 @@ class Component {
   }
 
   render() {
-    this._element = this._createElement(this._template);
-    this._createListeners();
+    this._element = this._createElement();
+    this._addEventHandlers();
 
     return this._element;
   }
 
   unrender() {
-    this._removeListeners();
+    this._removeEventHandlers();
     this._element.remove();
     this._element = null;
   }
 
-  _createListeners() {}
+  _addEventHandlers() {}
 
-  _removeListeners() {}
+  _removeEventHandlers() {}
+
+  update() {}
 }
 
 export default Component;
